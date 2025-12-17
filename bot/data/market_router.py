@@ -1,20 +1,11 @@
-import yfinance as yf
-from bot.data.coingecko_data import get_crypto_price
+from bot.data.yahoo_data import get_yahoo_data
+from bot.data.coingecko_data import get_coingecko_price
 
 def get_market_data(pair: str):
-    # 1️⃣ Try yfinance first
-    try:
-        ticker = yf.Ticker(pair)
-        data = ticker.history(period="1d", interval="5m")
+    # 1️⃣ Try Yahoo (full OHLC → indicators)
+    data = get_yahoo_data(pair)
+    if data:
+        return data
 
-        if not data.empty:
-            price = round(float(data["Close"].iloc[-1]), 5)
-            return {
-                "price": price,
-                "df": data
-            }
-    except Exception:
-        pass
-
-    # 2️⃣ Fallback to CoinGecko (crypto only)
-    return get_crypto_price(pair)
+    # 2️⃣ Fallback: CoinGecko (price only)
+    return get_coingecko_price(pair)
