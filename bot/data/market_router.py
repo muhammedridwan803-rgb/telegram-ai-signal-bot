@@ -1,13 +1,18 @@
-from bot.data.crypto_data import get_crypto_data
-from bot.data.forex_data import get_forex_data
+import yfinance as yf
 
+def get_market_data(pair: str):
+    try:
+        ticker = yf.Ticker(pair)
+        data = ticker.history(period="1d", interval="5m")
 
-def get_market_data(pair, interval="1h"):
-    pair = pair.upper()
+        if data.empty:
+            return None
 
-    # Simple forex detection (EURUSD, GBPJPY, etc.)
-    if len(pair) == 6 and pair.isalpha():
-        return get_forex_data(pair, interval)
+        price = round(float(data["Close"].iloc[-1]), 5)
+        return {
+            "price": price,
+            "df": data
+        }
 
-    # Default to crypto
-    return get_crypto_data(pair, interval)
+    except Exception:
+        return None
