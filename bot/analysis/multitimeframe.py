@@ -1,27 +1,15 @@
-from bot.data.crypto_data import get_crypto_data
-from bot.analysis.indicators import analyze_indicators
-from bot.analysis.structure import detect_structure
+from bot.data.market_router import get_market_data
 
-def analyze_timeframe(symbol, interval):
-    data = get_crypto_data(symbol, interval=interval)
-    if not data or data.get("df") is None:
-        return {}
+def multi_tf_context(pair: str):
+    data = get_market_data(pair)
+
+    if not data or not data.get("df"):
+        return "Multi-timeframe data unavailable."
 
     df = data["df"]
-    ind = analyze_indicators(df)
-    struct = detect_structure(df)
 
-    return {
-        "trend": ind.get("trend"),
-        "structure": struct.get("structure")
-    }
-
-
-def multi_tf_context(symbol):
-    htf = analyze_timeframe(symbol, "4h")
-    ltf = analyze_timeframe(symbol, "1h")
-
-    return {
-        "HTF": htf,  # Higher timeframe
-        "LTF": ltf   # Lower timeframe
-    }
+    try:
+        trend = "Bullish" if df["Close"].iloc[-1] > df["Close"].mean() else "Bearish"
+        return f"Higher timeframe bias: {trend}"
+    except Exception:
+        return "Multi-timeframe analysis failed."
